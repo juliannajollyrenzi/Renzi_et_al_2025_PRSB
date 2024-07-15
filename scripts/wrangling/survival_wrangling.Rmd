@@ -23,10 +23,10 @@ This code creates a survival dataframe from our percent cover estimates for use 
 
 ```{r}
 # this is the percent tissue loss on a coral on a given day (cumulative, estimated visually from photos)
-coralTL <- read_csv(here("july2024_updates/data/coral_tissue_loss.csv"))
+coralTL <- read_csv(here("data/coral_tissue_loss.csv"))
   
 # this is the metadata for the experiment
-metadat <- read.csv(here("july2024_updates/data/metadata.csv")) 
+metadat <- read.csv(here("data/metadata.csv")) 
 ```
 
 # Calculate percent tissue loss
@@ -83,6 +83,6 @@ coralMTL %>%
 Save our survival dataframe as a CSV in the `generated_data` folder
 
 ```{r}
-write_csv(surv_df, here("july2024_updates/generated_data/coral_survival37.csv"))
+write_csv(surv_df, here("generated_data/coral_survival37.csv"))
 ```
 

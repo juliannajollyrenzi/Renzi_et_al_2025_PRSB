@@ -27,13 +27,13 @@ Note: "NW" is no wounding and "W" is wounding. See methods for more details.
 
 ```{r}
 # algal weight pre/post experiment
-algae <- read_csv(here("july2024_updates/data/field_experiment/algae_weight.csv"))
+algae <- read_csv(here("data/field_experiment/algae_weight.csv"))
 
 # information on colony size (for summary stat in text)
-size <- read_csv(here("july2024_updates/data/field_experiment/colony_specs.csv")) 
+size <- read_csv(here("data/field_experiment/colony_specs.csv")) 
 
 # daily monitoring of whether algae was present or not
-monitoring <- read_csv(here("july2024_updates/data/field_experiment/algal_monitoring.csv")) 
+monitoring <- read_csv(here("data/field_experiment/algal_monitoring.csv")) 
 ```
 
 # Get average colony size 
@@ -91,7 +91,7 @@ algae %>%
 ## Plot results
 
 ```{r plot percent differences}
-# pdf(here("july2024_updates/figures/field_algal_loss.pdf"), height = 4, width = 6)
+# pdf(here("figures/field_algal_loss.pdf"), height = 4, width = 6)
 
 perc_change %>% 
   # get this in terms of percents (out of 100)
@@ -128,7 +128,7 @@ m.PercRE <- lme(Percent_change~Treatment,
 Examine changes in clump presence through time using the monitoring data
 
 ```{r plot}
-# pdf(here("july2024_updates/figures/field_monitoring.pdf"), height = 5.5, width = 7)
+# pdf(here("figures/field_monitoring.pdf"), height = 5.5, width = 7)
 
 monitoring %>% 
   # clean up for figure

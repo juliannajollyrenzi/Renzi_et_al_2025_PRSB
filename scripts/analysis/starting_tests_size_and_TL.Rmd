@@ -29,9 +29,9 @@ This script is making sure there are no size differences or differences in initi
 ## Bring in weight data
 
 ```{r}
-weights <- read_csv(here("july2024_updates/data/initial_buoyant_weights.csv"))
+weights <- read_csv(here("data/initial_buoyant_weights.csv"))
 
-metadat <- read.csv(here("july2024_updates/data/metadata.csv")) 
+metadat <- read.csv(here("data/metadata.csv")) 
 ```
 
 
@@ -58,7 +58,7 @@ mWeight <- aov(Initial_dry_weight ~ Treatment, data = weightCor)
 Bring in the survival dataframe:
 
 ```{r}
-surv_df <- read_csv(here("july2024_updates/generated_data/coral_survival37.csv")) %>% # from the survival_wrangling.Rmd script
+surv_df <- read_csv(here("generated_data/coral_survival37.csv")) %>% # from the survival_wrangling.Rmd script
   # join with initial weights
   full_join(weights)
 ```
@@ -153,7 +153,7 @@ First, bring in the tissue loss data:
 
 ```{r}
 # tissue loss estimates
-tissueLoss <- read_csv(here("july2024_updates/data/coral_tissue_loss.csv"))
+tissueLoss <- read_csv(here("data/coral_tissue_loss.csv"))
 
 # Note: survival data already brought in in part #1 (surv_df)
 ```

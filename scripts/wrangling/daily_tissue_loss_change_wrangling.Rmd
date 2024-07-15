@@ -24,14 +24,14 @@ This is a separate code to go from cumulative percent cover to percent tissue lo
 
 ```{r}
 # this is the percent tissue loss on a nubbin on a given day (cumulative, taken from photos)
-coralTL <- read_csv(here("july2024_updates/data/coral_tissue_loss.csv")) %>% 
+coralTL <- read_csv(here("data/coral_tissue_loss.csv")) %>% 
   # put in correct date format
-  mutate(Date = as.Date(nubbinDat$Date, format='%m/%d/%y'))
+  mutate(Date = as.Date(Date, format='%m/%d/%y'))
   
   
   
 # this is the metadata for the experiment
-metadat <- read.csv(here("july2024_updates/data/metadata.csv")) 
+metadat <- read.csv(here("data/metadata.csv")) 
 ```
 
 # Calculate daily tissue loss
@@ -59,7 +59,7 @@ coralTL %>%
 # Save CVS
 
 ```{r}
-write_csv(tissueLoss, file = here("july2024_updates/generated_data/tissue_loss_change.csv"))
+write_csv(tissueLoss, file = here("generated_data/tissue_loss_change.csv"))
 ```
 
 

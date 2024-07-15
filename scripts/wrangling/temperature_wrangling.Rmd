@@ -27,7 +27,7 @@ We'll start by bringing in one CSV and then do that same process with a loop for
 
 ```{r}
 # first get list of all files we need to read in
-hob_filelist <- list.files(here("july2024_updates/data/HOBO_temperature_loggers/CSVs")) 
+hob_filelist <- list.files(here("data/HOBO_temperature_loggers/CSVs")) 
 
 # start with the first file on the list
 hob_ID <- hob_filelist[1] 
@@ -36,7 +36,7 @@ hob_ID <- hob_ID[[1]][1] # get logger ID
 name <- paste("h", hob_ID, sep="") # get name of the file that we'll use to refer to the csv (h for HOBO)
 
 # rename columns to be more useful
-name <- read_csv(here(paste("july2024_updates/data/HOBO_temperature_loggers/CSVs/", hob_filelist[1], sep = "")), skip=1) 
+name <- read_csv(here(paste("data/HOBO_temperature_loggers/CSVs/", hob_filelist[1], sep = "")), skip=1) 
   colnames(name)[1] <- "Data_point"
   colnames(name)[2] <- "Date_time"
   colnames(name)[3] <- "Temp_C" 
@@ -60,7 +60,7 @@ for (file in hob_filelist[-1]) { # skip the first file because that's what we di
   hob_ID <- strsplit(hob_ID, "[.]")
   hob_ID <- hob_ID[[1]][1]
   name <- paste("h", hob_ID, sep="")
-  name <- read_csv(here(paste("july2024_updates/data/HOBO_temperature_loggers/CSVs/", file, sep = "")), skip=1) # read in each csv
+  name <- read_csv(here(paste("data/HOBO_temperature_loggers/CSVs/", file, sep = "")), skip=1) # read in each csv
   colnames(name)[1] <- "Data_point" # re-name columns to match
   colnames(name)[2] <- "Date_time"
   colnames(name)[3] <- "Temp_C"
@@ -77,7 +77,7 @@ Attach the metadata
 
 ```{r}
 # Bring in the a key for logger tank position and site
-hob_metadat <- read_csv(here("july2024_updates/data/HOBO_temperature_loggers/HOBO_metadata.csv"))
+hob_metadat <- read_csv(here("data/HOBO_temperature_loggers/HOBO_metadata.csv"))
 
 # want to make key the same format (both characters because tidyverse)
 hob_metadat$Hobo_ID <- as.character(hob_metadat$Hobo_ID)
@@ -134,7 +134,7 @@ temp_filt_cumm %>%
 Here we'll save the full temperature time series, averaged across hobo loggers (1 average value per date-time, NOT the mean daily value)
 
 ```{r}
-write_csv(x = temp_time_avgs, file = here("july2024_updates/generated_data/hobo_timeseries.csv"))
+write_csv(x = temp_time_avgs, file = here("generated_data/hobo_timeseries.csv"))
 ```
 
 

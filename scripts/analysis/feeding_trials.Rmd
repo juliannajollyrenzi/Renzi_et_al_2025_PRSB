@@ -22,7 +22,7 @@ require(wesanderson) # colors
 # Bring in the data
 
 ```{r}
-algalFeed <- read_csv(here("july2024_updates/data/algal_feeding_trial.csv"))
+algalFeed <- read_csv(here("data/algal_feeding_trial.csv"))
 ```
 
 # Set color palette
@@ -66,7 +66,7 @@ algalFeed %>%
 Plot
 
 ```{r plot} 
-# pdf(here("july2024_updates/figures/algalFeedTrial.pdf"), width = 6, height = 5)
+# pdf(here("figures/algalFeedTrial.pdf"), width = 6, height = 5)
 
 percLoss %>% 
   ggplot(aes(x = Species, y = Percent_loss, fill = Species)) +

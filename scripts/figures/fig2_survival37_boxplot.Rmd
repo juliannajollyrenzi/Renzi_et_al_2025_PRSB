@@ -23,7 +23,7 @@ require(patchwork) # for joining figures
 
 ```{r}
 # this CSV has the survival information for each coral, generated using the survival_wrangling.Rmd script with a threshold of 37.5% tissue loss
-surv_df <- read_csv(here("july2024_updates/generated_data/coral_survival37.csv"))
+surv_df <- read_csv(here("generated_data/coral_survival37.csv"))
 ```
 
 # Set color palette
@@ -104,7 +104,7 @@ surv_df %>%
 Plot them together
 
 ```{r}
-# pdf(here("july2024_updates/figures/surival_boxplts.pdf"), height = 9, width = 7.5)
+# pdf(here("figures/surival_boxplts.pdf"), height = 9, width = 7.5)
 
 boxp.nowound / boxp.wound
 

@@ -23,10 +23,10 @@ This script summarizes the crab and benthic survey data, which we report in our 
 
 ```{r load data}
 # field crab surveys
-crabSurvey <- read_csv(here("july2024_updates/data/field_crab_surveys.csv"))
+crabSurvey <- read_csv(here("data/field_crab_surveys.csv"))
 
 # benthic surveys
-benthos <- read_csv(here("july2024_updates/data/benthic_survey.csv"))
+benthos <- read_csv(here("data/benthic_survey.csv"))
 ```
 
 # Summarize results

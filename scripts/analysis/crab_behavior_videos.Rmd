@@ -24,10 +24,10 @@ require(FSA) # for dunn test
 
 ```{r load data}
 # bring in the csv that has the percent cover of each nubbin, determined beforehand using ImageJ
-perCover <- read_csv(here("july2024_updates/data/crab_feeding_imageJ.csv"))
+perCover <- read_csv(here("data/crab_feeding_imageJ.csv"))
 
 # bring in the bite count data from the videos
-behavior <- read_csv(here("july2024_updates/data/crab_feeding_behavior.csv"))
+behavior <- read_csv(here("data/crab_feeding_behavior.csv"))
 ```
 
 # Get carapace information
@@ -113,7 +113,7 @@ dunnTest(Preference ~ as.factor(Substrate),
 # want to order it as alive, margin, dead for aesthetics
 level_order <- c('Alive', 'Margin', 'Dead') 
 
-# pdf(here("july2024_updates/figures/feeding_pref.pdf"), width = 6, height = 4)
+# pdf(here("figures/feeding_pref.pdf"), width = 6, height = 4)
 strauss_long %>% 
   # plot
   ggplot(aes(x = factor(Substrate, level = level_order), y = Preference, fill = Substrate)) +

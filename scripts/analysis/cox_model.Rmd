@@ -26,7 +26,7 @@ require(survminer) # for creating survival plots
 
 ```{r load data}
 # this CSV has the survival information for each coral, generated using the survival_wrangling.Rmd script with a threshold of 37.5% tissue loss
-surv_df <- read_csv(here("july2024_updates/generated_data/coral_survival37.csv"))
+surv_df <- read_csv(here("generated_data/coral_survival37.csv"))
 ```
 
 # Set color palette
@@ -250,7 +250,7 @@ arrange_ggsurvplots(list(
 Save figure
 
 ```{r save figure}
-ggsave(here("july2024_updates/figures/survival_curves.pdf"), plts_coxphR, width = 10, height = 8)
+ggsave(here("figures/survival_curves.pdf"), plts_coxphR, width = 10, height = 8)
 ```
 
 Estimate ending probabilities
