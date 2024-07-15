@@ -1,0 +1,112 @@
+---
+title: "Survival boxplot"
+output: html_document
+date: "2024-07-13"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# clear the workspace
+rm(list = ls())
+
+# load required packages
+require(tidyverse) # data wrangling
+require(here) # relative file paths
+require(wesanderson) # color palette
+require(patchwork) # for joining figures
+```
+
+# Bring in the data
+
+```{r}
+# this CSV has the survival information for each coral, generated using the survival_wrangling.Rmd script with a threshold of 37.5% tissue loss
+surv_df <- read_csv(here("july2024_updates/generated_data/coral_survival37.csv"))
+```
+
+# Set color palette
+
+Create our standard color palette, using the Wes Anderson package
+
+```{r}
+vibRed <- wes_palette("Darjeeling1", n = 5)[1]
+forGreen <- wes_palette("Darjeeling1", n = 5)[2]
+lightO <- wes_palette("Darjeeling1", n = 5)[3]
+darkO <- wes_palette("Darjeeling1", n = 5)[4]
+skyB <- wes_palette("Darjeeling1", n = 5)[5]
+```
+
+# Get general statistics
+
+For crab carapace
+
+```{r average crab carapace}
+# mean algal biomass (reported in text)
+mean(surv_df$Crab_size_mm_initial, na.rm = TRUE)
+
+# standard error
+sd(surv_df$Crab_size_mm_initial, na.rm = TRUE)/sqrt(40)
+```
+
+For starting algal biomass
+
+```{r average algal biomass}
+# mean algal biomass (reported in text)
+mean(surv_df$Initial_algal_biomass_g, na.rm = TRUE)
+
+# standard error
+sd(surv_df$Initial_algal_biomass_g, na.rm = TRUE)/sqrt(40)
+```
+
+# Plot the survival among treatments
+
+```{r}
+# order the treatments
+surv_df$Treatment <- factor(surv_df$Treatment,levels = c("NAN", "NAW",  
+                                                         "NNW", "NNN", "CAN",
+                                                         "CAW", "CNN", "CNW"))
+
+# broken up by no wounding:
+surv_df %>% 
+  filter(Coral_ID != 7, Coral_ID != 29) %>% # get rid of the ones that were broken 
+  filter(Treatment == "NAN" | Treatment == "NNN" | Treatment == "CAN" | Treatment == "CNN") %>% 
+  ggplot(aes(x = Treatment, y = Delta_time, fill = Algae_treatment)) +
+  geom_boxplot(size = 1) +
+  scale_fill_manual(values = alpha(c(darkO, forGreen), 0.7)) +
+  ylab("Number of days to death") +
+  ggtitle("(a) No wounding") +
+  scale_y_continuous(breaks = c(0, 5, 10, 15, 20, 25)) +
+  theme_classic() +
+  theme(text = element_text(size = 20), legend.position = "none",
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(), 
+        axis.ticks.x=element_blank()) -> boxp.nowound
+
+
+# and wounding:
+surv_df %>% 
+  filter(Coral_ID != 7, Coral_ID != 29) %>% # get rid of the dropped ones
+  filter(Treatment == "NAW" | Treatment == "NNW" | Treatment == "CAW" | Treatment == "CNW") %>% 
+  ggplot(aes(x = Treatment, y = Delta_time, fill = Algae_treatment)) +
+  geom_boxplot(size = 1) +
+  scale_fill_manual(values = alpha(c(darkO, forGreen), 0.7)) +
+  ylab("Number of days to death") +
+  scale_y_continuous(breaks = c(0, 5, 10, 15, 20, 25)) +
+  ggtitle("(b) Wounding") +
+  scale_x_discrete(labels=c("Algae","Control","Crab + Algae","Crab")) +
+  theme_classic() +
+  theme(text = element_text(size = 20), legend.position = "none") -> boxp.wound
+
+```
+
+Plot them together
+
+```{r}
+# pdf(here("july2024_updates/figures/surival_boxplts.pdf"), height = 9, width = 7.5)
+
+boxp.nowound / boxp.wound
+
+# dev.off()
+```

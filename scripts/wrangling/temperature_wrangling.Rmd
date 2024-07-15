@@ -1,0 +1,140 @@
+---
+title: "Temperature data wrangling"
+author: "Julianna Renzi"
+date: "9/28/2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# clear the workspace
+rm(list = ls())
+
+# load required packages
+require(tidyverse) # data manipulation
+require(here) # relative file paths
+require(lubridate) # dates and times
+```
+
+# Bring in the temperature data from HOBO temperature loggers inside tanks and their associated metadata
+
+We have a CSV for each logger and we use the code below to combine those into one dataframe with all of the temperature data.
+
+We'll start by bringing in one CSV and then do that same process with a loop for the rest of the CSVs
+
+```{r}
+# first get list of all files we need to read in
+hob_filelist <- list.files(here("july2024_updates/data/HOBO_temperature_loggers/CSVs")) 
+
+# start with the first file on the list
+hob_ID <- hob_filelist[1] 
+hob_ID <- strsplit(hob_ID, "[.]") # get the file name separated from the .csv extension
+hob_ID <- hob_ID[[1]][1] # get logger ID
+name <- paste("h", hob_ID, sep="") # get name of the file that we'll use to refer to the csv (h for HOBO)
+
+# rename columns to be more useful
+name <- read_csv(here(paste("july2024_updates/data/HOBO_temperature_loggers/CSVs/", hob_filelist[1], sep = "")), skip=1) 
+  colnames(name)[1] <- "Data_point"
+  colnames(name)[2] <- "Date_time"
+  colnames(name)[3] <- "Temp_C" 
+  colnames(name)[4] <- "Intensity_lum_per_ft2" 
+  
+# make column into a datetime object to make it easier using lubridate
+  # see https://evoldyn.gitlab.io/evomics-2018/ref-sheets/R_lubridate.pdf for more details
+name$Date_time <- mdy_hms(name$Date_time)
+name <- name[, c(1,2,3)] # remove End of File column/other columns so they don't get wacky in a row bind
+name$Hobo_ID <- hob_ID
+temp_data <- name
+
+```
+
+Now create the loop
+
+```{r}
+# use a loop to import all of the data
+for (file in hob_filelist[-1]) { # skip the first file because that's what we did above
+  hob_ID <- file
+  hob_ID <- strsplit(hob_ID, "[.]")
+  hob_ID <- hob_ID[[1]][1]
+  name <- paste("h", hob_ID, sep="")
+  name <- read_csv(here(paste("july2024_updates/data/HOBO_temperature_loggers/CSVs/", file, sep = "")), skip=1) # read in each csv
+  colnames(name)[1] <- "Data_point" # re-name columns to match
+  colnames(name)[2] <- "Date_time"
+  colnames(name)[3] <- "Temp_C"
+  colnames(name)[4] <- "Intensity_lum_per_ft2" 
+  name$Date_time <- mdy_hms(name$Date_time) # make it a datetime object
+  name <- name[, c(1,2,3)] 
+  name$Hobo_ID <- hob_ID # add the hobo identifier
+  temp_data <- bind_rows(temp_data, name)
+}
+  
+```
+
+Attach the metadata
+
+```{r}
+# Bring in the a key for logger tank position and site
+hob_metadat <- read_csv(here("july2024_updates/data/HOBO_temperature_loggers/HOBO_metadata.csv"))
+
+# want to make key the same format (both characters because tidyverse)
+hob_metadat$Hobo_ID <- as.character(hob_metadat$Hobo_ID)
+
+# and check to make sure the IDs match (no obvious typos)
+l1 <- sort(unique(as.numeric(temp_data$Hobo_ID)))
+l2 <- sort(unique(as.numeric(hob_metadat$Hobo_ID)))
+
+for (id in l1){
+  if (id %in% l2){
+    print("YEET")
+  } else {
+    print("Nawhh")
+  }
+} 
+
+# or:
+l1 == l2
+
+# then join the metadata to the temperature data
+label_temp <- left_join(temp_data, hob_metadat, by="Hobo_ID") 
+```
+
+# Begin summarizing the temperature data
+
+```{r}
+# look for earliest date
+label_temp$Date_time %>% min # Jan 26 (corals started acclimating )
+
+label_temp %>% 
+  filter(Tank != 21) %>% # don't want the control tank we didn't use
+  filter(Date_time >=  as.Date("2020-01-27") & Date_time <  as.Date("2020-02-26")) %>% # just the experiment dates and acclimation period
+  mutate(Date_time = ifelse(Hobo_ID == as.character(10550960) & Date_time >  as.Date("2020-02-22"), NA, Date_time)) %>% 
+  # get rid of loggers after the dates they were pulled
+  # We're only keeping up to the date BEFORE they were pulled so there's no air temperature values from when they were pulled out
+  mutate(Date_time = ifelse(Hobo_ID == as.character(10551953) & Date_time >  as.Date("2020-02-05"), NA, Date_time)) %>% 
+  mutate(Date_time = ifelse(Hobo_ID == as.character(10551958) & Date_time >  as.Date("2020-02-11"), NA, Date_time)) %>% 
+  filter(!is.na(Date_time)) %>% 
+  mutate(Date_time = as_datetime(Date_time)) -> temp_filt_cumm # don't know why I have to do this again, but they converted back to numbers
+
+```
+
+Get an average temperature value per day-time across tanks
+
+```{r}
+temp_filt_cumm %>% 
+  group_by(Date_time) %>% 
+  summarise(Mean_temp = mean(Temp_C)) %>% 
+  mutate(Day = date(Date_time)) -> temp_time_avgs # create a line for each day-time (can be multiple loggers recording at the same date-time, but want one value as a mean across tanks)
+```
+
+# Save averages to a CSV
+
+Here we'll save the full temperature time series, averaged across hobo loggers (1 average value per date-time, NOT the mean daily value)
+
+```{r}
+write_csv(x = temp_time_avgs, file = here("july2024_updates/generated_data/hobo_timeseries.csv"))
+```
+
+

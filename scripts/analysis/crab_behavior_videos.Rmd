@@ -1,0 +1,138 @@
+---
+title: "Crab feeding behavior"
+author: "Julianna Renzi"
+date: "4/21/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# clear the workspace
+rm(list = ls())
+
+# load required packages
+require(here) # relative file paths
+require(tidyverse) # data wrangling
+require(RColorBrewer) # color palette
+require(FSA) # for dunn test
+```
+
+# Bring in the data
+
+```{r load data}
+# bring in the csv that has the percent cover of each nubbin, determined beforehand using ImageJ
+perCover <- read_csv(here("july2024_updates/data/crab_feeding_imageJ.csv"))
+
+# bring in the bite count data from the videos
+behavior <- read_csv(here("july2024_updates/data/crab_feeding_behavior.csv"))
+```
+
+# Get carapace information
+
+To report in text
+
+```{r carapace size}
+mean(behavior$Carapace_mm)
+
+# standard error
+sd(behavior$Carapace_mm)/sqrt(length(behavior$Carapace_mm))
+```
+
+# Calculate Strauss' index to assess preference
+
+Join the dataframes by the trial number and add derived columns (e.g., total number of bites, percent cover, Strauss' index, etc.). Strauss' linear selectivity index was taken from the Transactions of the American Fisheries Society, 1979 ("Reliability estimates fro Ivlev's electivity index, the forage ratio, and a proposed linear index of food selection") and is just the difference in the proportion of bites taken vs. the availability of the resource. That means that the index ranges from -1 to 1, with positive values indicating a preference, negative values indicating avoidance, and 0 indicating no preference. It also means that t-statistics can be used for statistical comparison, according to Strauss.
+
+```{r calculate Strauss Index}
+behavior %>% 
+  full_join(perCover, by = "Trial") %>% 
+  # add columns for percent cover of relevant pixels (alive/margin/dead-where we counted bites)
+  mutate(Total_pixels = Alive_Pixels + Margin_Pixels + Dead_Pixels,
+         Prop_dead = Dead_Pixels / Total_pixels,
+         Prop_margin = Margin_Pixels / Total_pixels,
+         Prop_alive = Alive_Pixels / Total_pixels) %>% 
+  # add columns for percent of bites
+  mutate(Total_bites = Bites_alive + Bites_margin + Bites_dead,
+         Prop_bites_dead = Bites_dead / Total_bites,
+         Prop_bites_margin = Bites_margin / Total_bites,
+         Prop_bites_alive = Bites_alive / Total_bites) %>% 
+  # calculate the indices
+  mutate(Dead = Prop_bites_dead - Prop_dead,
+         Margin = Prop_bites_margin - Prop_margin,
+         Alive = Prop_bites_alive - Prop_alive) %>% 
+  # remove the crabs that did not feed
+  filter(Total_bites != 0) -> strauss
+```
+
+Also reformat for a few tasks
+
+```{r get data in long format}
+strauss %>% 
+  # reformat so it's easier to plot
+  pivot_longer(cols = c(Dead, Margin, Alive), names_to = "Substrate", values_to = "Preference") -> strauss_long
+```
+
+# Test differences
+
+Are these values different than zero?
+
+```{r}
+t.test(strauss$Alive, mu = 0) # is different
+  shapiro.test(strauss$Alive) # is normal
+  
+t.test(strauss$Dead, mu = 0) # is different
+  shapiro.test(strauss$Dead) # is normal
+  
+t.test(strauss$Margin, mu = 0) # is different
+  shapiro.test(strauss$Margin) # is normal
+
+
+# these are signifiant even with a Bonferonni correction for doing 3 separate tests:
+0.05/3
+```
+
+Are these values different from each other? 
+
+```{r}
+kruskal.test(Preference ~ Substrate, data = strauss_long) # this is non-parametric
+
+m1 <- aov(Preference ~ Substrate, data = strauss_long) # this is parametric
+  summary(m1) # they are different either way
+
+
+dunnTest(Preference ~ as.factor(Substrate),
+         data = strauss_long,
+         method="bonferroni")
+```
+
+# Plot 
+
+```{r plot Strauss index vs. treatment}
+# want to order it as alive, margin, dead for aesthetics
+level_order <- c('Alive', 'Margin', 'Dead') 
+
+# pdf(here("july2024_updates/figures/feeding_pref.pdf"), width = 6, height = 4)
+strauss_long %>% 
+  # plot
+  ggplot(aes(x = factor(Substrate, level = level_order), y = Preference, fill = Substrate)) +
+  geom_boxplot() +
+  labs(x = "Substrate", y = "Preference") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  scale_fill_brewer(palette="Oranges") + 
+  geom_point(alpha = 0.5) +
+  theme_classic() +
+  theme(text = element_text(size=18), legend.position="none") +
+  xlab("") +
+  ylim(-1, 1) +
+  stat_summary(geom = 'text', label = c("a", "b", "c"), fun.y = max, vjust = -1, size=6, color = c("black", "black", "black")) # add letters for significance
+
+# dev.off()
+
+```
+
+
+
+
+

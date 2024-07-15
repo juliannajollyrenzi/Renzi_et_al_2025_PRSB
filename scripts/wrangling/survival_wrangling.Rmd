@@ -1,0 +1,88 @@
+---
+title: "Create survival dataframe"
+output: html_document
+date: "2024-07-06"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# clear the workspace
+rm(list = ls())
+
+# load packages
+require(here) # relative file paths
+require(tidyverse)
+```
+
+This code creates a survival dataframe from our percent cover estimates for use in survival analyses and figures
+
+# Bring in the data
+
+```{r}
+# this is the percent tissue loss on a coral on a given day (cumulative, estimated visually from photos)
+coralTL <- read_csv(here("july2024_updates/data/coral_tissue_loss.csv"))
+  
+# this is the metadata for the experiment
+metadat <- read.csv(here("july2024_updates/data/metadata.csv")) 
+```
+
+# Calculate percent tissue loss
+
+Since two cover estimates were made on each coral fragment (front and back), we average the two estimates to get the average percent of tissue a coral has lost on a given day
+
+```{r}
+# summarize for each date (average both coral sides)
+coralTL %>% 
+  # get dates in datetime format
+  mutate(Date = as.Date(Date, format='%m/%d/%y')) %>% 
+  # average for both sides (front & back)
+  group_by(Coral_ID, Date) %>% 
+  summarize(Mean_TL = mean(Percent_dead)) -> coralMTL # mean tissue loss
+```
+
+# Make a survival dataframe 
+
+This code analyses the survival data with the most conservative threshold of 37.5% tissue loss (i.e., the least amount of tissue loss exhibited by a coral fragment that was pulled from the experiment for sampling), which was recommended by a previous reviewer and is likely a better approach (compared to the actual day they were pulled, which could vary in final percent tissue loss), although note that the overall conclusions are the same for both approaches.
+
+```{r}
+coralMTL %>% 
+  # look for the first day a coral hit this % tissue loss
+  filter(Mean_TL >= 37.50) %>% 
+  group_by(Coral_ID) %>% 
+  summarize(Death_day = min(Date)) %>% 
+  # join with metadata
+  full_join(metadat) %>% 
+  # deal with the two corals that broke--these were not true "deaths" but they were removed from the experiment on these specific days
+  mutate(Death_day = case_when(Coral_ID == 7 ~ as.Date("2020-02-14"), 
+                               Coral_ID == 29 ~ as.Date("2020-02-16"),
+                               TRUE ~ Death_day)) %>% 
+  # make sure operations are rowwise (not just the first row)
+  rowwise() %>% 
+  # since the first day of the experiment was the first day of the month, we can just grab the day of the month as the day of the experiment
+  # To do this we turn it into a character to use stringr split functions, but then turn it back into a numeric 
+  mutate(Delta_time = str_split(as.character(Death_day), "-")[[1]][3]) %>% 
+  mutate(Delta_time = as.numeric(Delta_time)) %>% 
+  # censor the ones that broke as well as the ones that made it to the end without >= 37.5% tissue loss (i.e., those with no death days)
+  mutate(Censored = case_when(Coral_ID == 7 ~ 0, 
+                              Coral_ID == 29 ~ 0,
+                              is.na(Death_day) ~ 0,
+                              TRUE ~ 1)) %>% 
+  # those who stayed in the experiment made it 25 days without "dying", which we'll add in manually here
+  # note these aren't true "death days" this is just saying they were censored at day 25 (since we don't know if they would have died on day 26, etc.)
+  mutate(Delta_time = case_when(is.na(Death_day) ~ 25,
+                               TRUE ~ Delta_time)) %>% 
+  mutate(Death_day = case_when(is.na(Death_day) ~ as.Date("2020-02-25"),
+                               TRUE ~ Death_day) ) -> surv_df
+```
+
+# Write CSV
+
+Save our survival dataframe as a CSV in the `generated_data` folder
+
+```{r}
+write_csv(surv_df, here("july2024_updates/generated_data/coral_survival37.csv"))
+```
+

@@ -1,0 +1,151 @@
+---
+title: "Tissue loss vs. temperature plots"
+author: "Julianna Renzi"
+date: "11/7/2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# clear the workspace
+rm(list = ls())
+
+# load required packages
+require(tidyverse) # data manipulation
+require(here) # relative file paths
+require(lubridate) # dates and times
+require(wesanderson) # color palette
+require(patchwork) # combining figures
+```
+
+# Bring in the data
+
+```{r}
+# this is the temperature time series from the experiment, with one value per date/time (averaged across HOBO loggers, with a value per few minutes)
+tempTimeseries <- read_csv(here("july2024_updates/generated_data/hobo_timeseries.csv")) # this file was generated using the temperature_wrangling.Rmd script
+
+# this is the percent tissue loss change experienced by a coral on a given day 
+tissueLoss <- read_csv(here("july2024_updates/generated_data/tissue_loss_change.csv")) # this file was generated using the daily_tissue_loss_change_wrangling.Rmd script
+```
+
+# Set aesthetics
+
+Create our color palette from the Wes Anderson package
+
+```{r}
+vibRed <- wes_palette("Darjeeling1", n = 5)[1]
+forGreen <- wes_palette("Darjeeling1", n = 5)[2]
+lightO <- wes_palette("Darjeeling1", n = 5)[3]
+darkO <- wes_palette("Darjeeling1", n = 5)[4]
+skyB <- wes_palette("Darjeeling1", n = 5)[5]
+
+
+# and specify text size
+txt_sz <- 15 
+```
+
+
+# Plot temperature through time
+
+Look at how the temperature changes over time
+
+```{r}
+tempTimeseries %>% 
+  filter(Date_time > as_datetime("2020-02-01 00:00:00")) %>% # just from the start of the tissue loss data
+  ggplot(aes(x = Date_time, y = Mean_temp)) +
+  geom_line() +
+  geom_hline(yintercept = 27.3, 
+             color = vibRed, 
+             linetype = "dotted") + # this is the Heron monthly mean water temp according to: https://seatemperature.info/heron-island-water-temperature.html and also JB
+  theme_classic() +
+  # make first rectangle highlighting the first peak 
+  annotate("rect",
+           xmin = as_datetime("2020-02-03 00:00:00"), 
+           xmax = as_datetime("2020-02-08 00:00:00"), 
+           ymin = -Inf, 
+           ymax = Inf, fill = lightO, alpha = 0.2) +
+  annotate("rect",
+           xmin = as_datetime("2020-02-15 00:00:00"), 
+           xmax = as_datetime("2020-02-22 00:00:00"), 
+           ymin = -Inf, 
+           ymax = Inf, fill = lightO, alpha = 0.2) +
+  ylab("Water temperature (°C)") +
+  xlab("") +
+  ylim(26, 33)  +
+  # change text size
+  theme(text = element_text(size = txt_sz)) +
+  ggtitle("(a)") -> tempTSFig
+  
+
+```
+
+
+# Plot tissue loss through time
+
+Get the average tissue loss by treatment (average tissue loss across the treatment group on a given day)
+
+```{r}
+tissueLoss %>% 
+  group_by(Crab_treatment, Algae_treatment, Wounding_treatment, Date) %>%
+  summarize(MeanTL = mean(Perc_tissue_loss)) -> avgTL
+```
+
+Then plot the data through time, broken up by treatments
+
+```{r}
+# make labels nice
+crab.labs <- c("Crab", "No crab")
+names(crab.labs) <- c("Y", "N")
+```
+
+First for crab:
+
+```{r}
+avgTL %>%
+  ggplot(aes(x = Date, y = MeanTL, color = Algae_treatment, linetype = Wounding_treatment)) +
+  geom_line() +
+  scale_linetype_manual(values=c("solid", "dashed"),
+                        name = "Wounding") +
+  facet_grid(.~Crab_treatment, labeller = labeller(Crab_treatment = crab.labs)) + # facet by crabs
+  ylab("Average tissue loss (%)") +
+  xlab("") +
+  scale_color_manual(values = c(darkO, forGreen),
+                     name = "Algae") + # clean up legend and colors
+  theme_classic() +
+  # add rectangles showing extreme heat periods
+  annotate("rect",
+           xmin = as.Date("2020-02-03", "%Y-%m-%d"), 
+           xmax = as.Date("2020-02-08", "%Y-%m-%d"), 
+           ymin = -Inf, 
+           ymax = Inf, fill = lightO, alpha = 0.2) +
+  annotate("rect",
+           xmin = as.Date("2020-02-15 00:00:00", "%Y-%m-%d"), 
+           xmax = as.Date("2020-02-22 00:00:00", "%Y-%m-%d"), 
+           ymin = -Inf, 
+           ymax = Inf, fill = lightO, alpha = 0.2) +
+  # change text size
+  theme(text = element_text(size = txt_sz),
+        legend.position = "top") +
+    ylim(0, 43) +
+  ggtitle("(b)") -> TLfig
+```
+
+
+
+
+
+# Combine and save figure 
+
+Save these figures as a PDF in the figures folder
+
+```{r}
+pdf(file = here("july2024_updates/figures/tissue_loss_temperature.pdf"), width = 8.5, height = 9)
+
+tempTSFig / TLfig
+
+dev.off()
+```
+

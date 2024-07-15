@@ -1,0 +1,98 @@
+---
+title: "Field surveys"
+output: html_document
+date: "2024-07-13"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# clear the workspace
+rm(list = ls())
+
+# load packages
+require(here) # relative file paths
+require(tidyverse)
+```
+
+This script summarizes the crab and benthic survey data, which we report in our paper.
+
+# Bring in the data
+
+```{r load data}
+# field crab surveys
+crabSurvey <- read_csv(here("july2024_updates/data/field_crab_surveys.csv"))
+
+# benthic surveys
+benthos <- read_csv(here("july2024_updates/data/benthic_survey.csv"))
+```
+
+# Summarize results
+
+## Crab surveys
+
+Total mean
+
+```{r get average total number of crabs}
+# get one total sum, irrespective of substrate type
+crabSurvey %>% 
+  group_by(Coral_ID) %>% 
+  summarize(Sum_cycl = sum(Cyclodius)) -> sumCycl
+
+# take the mean of that sum
+sumCycl %>% 
+  summarize(Mean_cycl = mean(Sum_cycl),
+            N = sqrt(n()),
+            sd_cycl = sd(Sum_cycl),
+            se_cycl = sd_cycl/N)
+```
+
+Mean per substrate
+
+```{r get crab data in wide format}
+crabSurvey %>% 
+  # get it into an easier format
+  pivot_wider(names_from = "Substrate_type",
+              values_from = Cyclodius,
+              values_fill = 0) -> crab_wide
+```
+
+```{r calculate means and errors}
+crab_wide %>% 
+  summarize(N = sqrt(n()),
+            # dead
+            Mean_dead = mean(Dead),
+            sd_dead = sd(Dead),
+            se_dead = sd_dead/N,
+            # margin
+            Mean_boundary = mean(Boundary),
+            sd_boundary = sd(Boundary),
+            se_boundary = sd_boundary/N,
+            # alive
+            Mean_alive = mean(Live),
+            sd_alive = sd(Live),
+            se_alive = sd_alive/N,
+            ) 
+```
+
+## Benthic surveys
+
+```{r get average percent cover}
+benthos %>% 
+  summarize(N = sqrt(n()),
+            # macroalgae
+            Mean_macro = mean(Perc_macroalgae),
+            sd_macro = sd(Perc_macroalgae),
+            se_macro = sd_macro/N,
+            # dead coral/turfy/CCA substrate
+            Mean_dead = mean(Perc_dead_coral),
+            sd_dead = sd(Perc_dead_coral),
+            se_dead = sd_dead/N,
+            # live coral
+            Mean_live = mean(Perc_coral),
+            sd_live = sd(Perc_coral),
+            se_live = sd_live/N
+            )
+```

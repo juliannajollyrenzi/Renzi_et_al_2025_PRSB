@@ -1,0 +1,142 @@
+---
+title: "Feeding trials"
+author: "Julianna Renzi"
+date: "11/10/2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# clear the workspace
+rm(list = ls())
+
+# load required packages
+require(tidyverse) # data wrangling
+require(here) # relative file paths
+require(wesanderson) # colors
+```
+
+# Bring in the data
+
+```{r}
+algalFeed <- read_csv(here("july2024_updates/data/algal_feeding_trial.csv"))
+```
+
+# Set color palette
+
+Create our color palette from the Wes Anderson package
+
+```{r color palette}
+vibRed <- wes_palette("Darjeeling1", n = 5)[1]
+forGreen <- wes_palette("Darjeeling1", n = 5)[2]
+lightO <- wes_palette("Darjeeling1", n = 5)[3]
+darkO <- wes_palette("Darjeeling1", n = 5)[4]
+skyB <- wes_palette("Darjeeling1", n = 5)[5]
+
+```
+
+# Get general stats 
+
+Carapace size
+
+```{r}
+# mean
+mean(algalFeed$Carapace_mm, na.rm = TRUE)
+
+# standard error
+N <- algalFeed %>% 
+  filter(Species == "Cyclodius") %>% dim() # get number of trials (17)
+
+sd(algalFeed$Carapace_mm, na.rm = TRUE)/sqrt(N[1])
+```
+
+# Summarize and plot 
+
+Summarize the data in terms of percent loss
+
+```{r calculate percent loss}
+algalFeed %>% 
+  mutate(Algal_loss = Initial_weight_g - Final_weight_g) %>% 
+  mutate(Percent_loss = Algal_loss / Initial_weight_g * 100) -> percLoss
+```
+
+Plot
+
+```{r plot} 
+# pdf(here("july2024_updates/figures/algalFeedTrial.pdf"), width = 6, height = 5)
+
+percLoss %>% 
+  ggplot(aes(x = Species, y = Percent_loss, fill = Species)) +
+  geom_boxplot() + 
+  scale_fill_manual(values = c(lightO, skyB)) +
+  labs(y="Percent loss of algal biomass", x = "Treatment") +
+  geom_point() +
+  theme_classic() +
+  theme(text = element_text(size=15)) +
+  stat_summary(geom = 'text', label = c("a", "b"), 
+               fun.y = max, vjust = -1, size=6, 
+               color = c(lightO, skyB)) +
+  
+  ylim(15,80) +
+  theme(legend.position = "none")
+
+# dev.off()
+```
+
+# Test differences
+
+First check assumptions
+
+```{r check normality}
+percLoss %>% 
+  filter(Species == "Cyclodius") -> cyclFeed
+
+percLoss %>% 
+  filter(Species == "Control") -> ctrlFeed
+
+par(mfrow=c(1,2))
+qqnorm(ctrlFeed$Percent_loss)
+qqline(ctrlFeed$Percent_loss)
+qqnorm(cyclFeed$Percent_loss)
+qqline(cyclFeed$Percent_loss) # Normal so t-test is legitimate
+shapiro.test(cyclFeed$Percent_loss) 
+shapiro.test(cyclFeed$Percent_loss) # Normal
+```
+
+```{r check variances}
+var.test(cyclFeed$Percent_loss, ctrlFeed$Percent_loss) # variances not equal--use Welch's test (var.equal = FALSE)
+```
+
+Run t-tests
+
+```{r t-test}
+t.test(ctrlFeed$Percent_loss, 
+       cyclFeed$Percent_loss, 
+       var.equal = FALSE, 
+       alternative = "two.sided") # significant
+```
+
+# Summary stats
+
+Calculate summary stats for initial algal biomass as well as percent change (reported in the results)
+
+```{r}
+percLoss %>% 
+  group_by(Species) %>% 
+  summarize(N = sqrt(n()), 
+            Mean_inital_g = mean(Initial_weight_g),
+            sd_inital_g = sd(Initial_weight_g),
+            se_initial_g = sd_inital_g/N,
+            Mean_per_loss = mean(Percent_loss))
+
+percLoss %>% 
+  group_by(Species) %>% 
+  summarize(N = sqrt(n()), 
+            Mean_perc_algal_loss = mean(Percent_loss), 
+            sd_perc_algal_loss = sd(Percent_loss),
+            se_perc_algal_loss = sd_perc_algal_loss/N) 
+```
+

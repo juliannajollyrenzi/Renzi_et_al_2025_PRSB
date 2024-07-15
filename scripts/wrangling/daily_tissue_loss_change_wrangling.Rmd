@@ -1,0 +1,65 @@
+---
+title: "Tissue loss wrangling"
+author: "Julianna Renzi"
+date: "11/8/2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# clear the workspace
+rm(list = ls())
+
+# load required packages
+require(tidyverse) # data wrangling
+require(here) # relative file paths
+```
+
+This is a separate code to go from cumulative percent cover to percent tissue loss in a given day. It creates a csv file that we use for plotting tissue loss versus tank temperature.
+
+# Bring in the data 
+
+```{r}
+# this is the percent tissue loss on a nubbin on a given day (cumulative, taken from photos)
+coralTL <- read_csv(here("july2024_updates/data/coral_tissue_loss.csv")) %>% 
+  # put in correct date format
+  mutate(Date = as.Date(nubbinDat$Date, format='%m/%d/%y'))
+  
+  
+  
+# this is the metadata for the experiment
+metadat <- read.csv(here("july2024_updates/data/metadata.csv")) 
+```
+
+# Calculate daily tissue loss
+
+Use these data to calculate the change in tissue loss among time points
+
+```{r}
+# summarize tissue loss for each date (average both coral sides to get one average/coral)
+coralTL %>% 
+  group_by(Coral_ID, Date) %>% # average for both sides (front & back)
+  summarize(Cum_TL = mean(Percent_dead)) %>% # this is cumulative
+  # add in metadata
+  full_join(metadat) %>% 
+  # they should be in order, but just to be sure:
+  arrange(Coral_ID, Date) %>% 
+  # calculate the change in percent cover since the last day
+  mutate(Perc_tissue_loss = case_when(
+    # for starting entries, want the change to be 0 (initial value)
+    Date == as.Date("2020-01-31") ~ 0,
+    # otherwise, want it to be the difference between itself and the record above it (previous time step)
+    TRUE ~ (Cum_TL - lag(Cum_TL))
+    )) -> tissueLoss # note: there are very small negative values for 11 and 15, but that was because they seemed to be healing slightly
+```
+
+# Save CVS
+
+```{r}
+write_csv(tissueLoss, file = here("july2024_updates/generated_data/tissue_loss_change.csv"))
+```
+
+

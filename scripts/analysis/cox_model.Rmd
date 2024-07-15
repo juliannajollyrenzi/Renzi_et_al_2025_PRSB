@@ -1,0 +1,283 @@
+---
+title: "Survival analysis"
+output: html_document
+date: "2024-07-06"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# clear the workspace
+rm(list = ls())
+
+# load required packages
+require(tidyverse) # data wrangling
+require(here) # relative file paths
+require(wesanderson) # color palette
+require(patchwork) # joining figures together
+require(survival) # for creating survival objects
+require(coxme) # for creating cox mixed effects models
+require(survminer) # for creating survival plots
+```
+
+# Bring in the data
+
+```{r load data}
+# this CSV has the survival information for each coral, generated using the survival_wrangling.Rmd script with a threshold of 37.5% tissue loss
+surv_df <- read_csv(here("july2024_updates/generated_data/coral_survival37.csv"))
+```
+
+# Set color palette
+
+Create our standard color palette, using the Wes Anderson package
+
+```{r set color palette}
+vibRed <- wes_palette("Darjeeling1", n = 5)[1]
+forGreen <- wes_palette("Darjeeling1", n = 5)[2]
+lightO <- wes_palette("Darjeeling1", n = 5)[3]
+darkO <- wes_palette("Darjeeling1", n = 5)[4]
+skyB <- wes_palette("Darjeeling1", n = 5)[5]
+```
+
+# Survival analysis
+
+## Surival object
+
+First, we'll create a survival object using the Kaplan-Meier method. The Kaplan-Meier estimator is a non-parametric (survival data are skewed) statistic that allows us to estimate the survival function. At t = 0 the Kaplan-Meier estimate is 1 and with t -> inf the estimator approaches 0 (no survival). Generally, this means we need to order survival times in order of increasing duration first, then calculate S(t) (the survival probability at time t) by multiplying surviving proportions in each step. The `survival` package does this for us, using the code in the next chunk. Ref: https://www.datacamp.com/community/tutorials/survival-analysis-R and http://www.sthda.com/english/wiki/cox-proportional-hazards-model
+
+```{r make survival object}
+surv_object <- Surv(time = surv_df$Delta_time, # time to death
+                    event = surv_df$Censored) # Censored points: 0 = right censored (not a true death), 1 = event at time
+```
+
+## Cox model
+
+Now we can use the survival objec to create a full (i.e., all possible interaction terms) cox proportional hazards regression model, with a random effect for Tank ID. Note that a hazard ratio (HR) > 1 is an increased risk of "death: and HR < 1 is a decreased risk.
+
+```{r full model}
+full.coxphR <- coxph(surv_object ~ Crab_treatment * Algae_treatment * Wounding_treatment + cluster(Tank_ID), 
+                    data = surv_df) # note response here must be a survival object returned by the Surv funtion (why we make the surv_object above)
+  summary(full.coxphR)
+```
+
+### Model selection
+
+Now we want to winnow down the terms in a stepwise fashion, dropping the highest order least important terms one by one. At the end we'll compare all models using AIC and take the one with the lowest AIC as our final model.
+
+First, drop the three way interaction:
+
+```{r reduce model}
+coxph.1R <- coxph(surv_object ~ Crab_treatment + Algae_treatment + Wounding_treatment +
+                   Crab_treatment:Algae_treatment +
+                   Crab_treatment:Wounding_treatment +
+                   Algae_treatment:Wounding_treatment + cluster(Tank_ID),
+                 data = surv_df)
+  summary(coxph.1R)
+```
+
+Then, drop the Crab:Algae interaction term:
+
+```{r reduce model}
+coxph.2R <- coxph(surv_object ~ Crab_treatment + Algae_treatment + Wounding_treatment +
+                   Crab_treatment:Wounding_treatment +
+                   Algae_treatment:Wounding_treatment + cluster(Tank_ID),
+                 data = surv_df)
+  summary(coxph.2R)
+
+```
+
+Then, drop the Algae:Wounding interaction term:
+
+```{r reduce model}
+coxph.3R <- coxph(surv_object ~ Crab_treatment + Algae_treatment + Wounding_treatment +
+                   Crab_treatment:Wounding_treatment + cluster(Tank_ID),
+                 data = surv_df)
+  summary(coxph.3R)
+
+```
+
+Then, drop the Crab:Wounding interaction term:
+
+```{r reduce model}
+coxph.4R <- coxph(surv_object ~ Crab_treatment + Algae_treatment + Wounding_treatment + 
+                    cluster(Tank_ID),
+                 data = surv_df)
+  summary(coxph.4R)
+
+```
+
+Then, drop the wounding term:
+
+```{r reduce model}
+coxph.5R <- coxph(surv_object ~ Crab_treatment + Algae_treatment + 
+                    cluster(Tank_ID),
+                 data = surv_df)
+```
+
+Then, drop the crab term:
+
+```{r reduce model}
+coxph.6R <- coxph(surv_object ~ Algae_treatment + 
+                    cluster(Tank_ID),
+                 data = surv_df)
+```
+
+Compare models using AIC:
+
+```{r compare models}
+AIC(full.coxphR, coxph.1R, coxph.2R, coxph.3R, coxph.4R, coxph.5R, coxph.6R) # looks like the best model is Model 3
+
+
+# set model 3 as our final model
+mCoxR <- coxph.3R
+  summary(mCoxR) # see the model overall is also significant (Wald test, LRT, longrank)
+
+```
+
+Get hazard ratios
+
+```{r hazard ratios}
+mCoxR %>% 
+  # exponents are hazard ratios
+  summary()
+```
+
+
+# Test model assumptions
+
+We want to test that the hazards are proportional (don't change over time), which is assumed in the coxph model. We'll use scaled Schoenfeld residuals, which are independent of time and should have a random pattern. The random assumption is supported by p > 0.05
+
+```{r test Schoenfeld}
+test.ph <- cox.zph(mCoxR) 
+  test.ph # meets this assumption (p > 0.05)
+  ggcoxzph(test.ph) # no pattern with time
+```
+
+Then we'll also test whether there's strong outlier pull/influential observations
+
+```{r look for outliers}
+ggcoxdiagnostics(mCoxR, type = "dfbeta", # dfbeta "plots the estimated changes in the regression coefficients upon deleting each observation in turn"
+                 ggtheme = theme_bw()) 
+```
+
+- These look fairly symmetric so are going to leave everything as-is
+
+# Plot hazards model
+
+Now we will plot survival curves as a function of the different treatments using `ggsurvplot` from the `survminer` package. 
+
+First, create survfit() objects using our Cox model and the treatments we're interested in plotting
+
+```{r get survfits}
+# first for crabs AND algae + crab + control:
+crab_df <- with(surv_df,
+               data.frame(Crab_treatment = c("Y", "Y", "N"), 
+                          Algae_treatment = c("N", "Y", "N"),
+                          Wounding_treatment = c("N", "N", "N")))
+  
+c.fitR <- survfit(mCoxR, newdata = crab_df, data = surv_df)
+
+# for algae AND algae + crab + control:
+alg_df <- with(surv_df,
+                data.frame(Crab_treatment = c("N", "Y", "N"), 
+                           Algae_treatment = c("Y", "Y", "N"),
+                           Wounding_treatment = c("N", "N", "N")))
+
+a.fitR <- survfit(mCoxR, newdata = alg_df, data = surv_df)
+
+# for JUST wounding:
+w_df <- with(surv_df,
+               data.frame(Crab_treatment = c("N", "N"), 
+                          Algae_treatment = c("N", "N"),
+                          Wounding_treatment = c("Y", "N")))
+
+w.fitR <- survfit(mCoxR, newdata = w_df, data = surv_df)
+
+# for wounding AND crab interaction
+CW_df <- with(surv_df,
+                data.frame(Crab_treatment = c("Y", "Y", "N", "N"), 
+                           Algae_treatment = c("N", "N", "N", "N"),
+                           Wounding_treatment = c("Y", "N", "Y", "N")))
+
+cw.fitR <- survfit(mCoxR, newdata = CW_df, data = surv_df)
+
+```
+
+Plot them
+
+```{r plot}
+# make a font size
+fnt_sz <- 15
+# and a legend side size
+leg_pos <- "top"
+
+arrange_ggsurvplots(list(
+  ggsurvplot(c.fitR, conf.int = TRUE, legend.labs=c("Crab", "Crab + Algae", "Control"),
+             ggtheme = theme_classic(base_size = fnt_sz),
+             legend = leg_pos,
+             palette = c(skyB, lightO, "darkgray"), 
+             legend.title = "(a)", conf.int.alpha = 0.1, 
+             xlab="Time (days)"),
+  ggsurvplot(a.fitR, legend.labs=c("Algae", "Crab + Algae", "Control"),
+             ggtheme = theme_classic(base_size = fnt_sz), 
+             legend = leg_pos,
+             palette = c(forGreen , lightO, "darkgray"), 
+             legend.title = "(c)", conf.int = TRUE, 
+             conf.int.alpha=0.1, 
+             xlab="Time (days)"),
+  ggsurvplot(w.fitR, data = surv_df, legend.labs=c("Wounding", "Control"),
+             ggtheme = theme_classic(base_size = fnt_sz), 
+             legend = leg_pos,
+             palette = c(darkO, "darkgray"), 
+             legend.title = "(b)", 
+             conf.int = TRUE, 
+             conf.int.alpha=0.1, 
+             xlab="Time (days)"),
+  ggsurvplot(cw.fitR, legend.labs=c("C+W", "C", "W", "Control"),
+             ggtheme = theme_classic(base_size = fnt_sz), 
+             legend = leg_pos,
+             palette = c(vibRed, skyB, darkO, "darkgray"), 
+             legend.title = "(d)", 
+             conf.int = TRUE, 
+             conf.int.alpha=0.1, 
+             xlab="Time (days)")),
+  ncol = 2, nrow = 2) -> plts_coxphR
+
+```
+
+Save figure
+
+```{r save figure}
+ggsave(here("july2024_updates/figures/survival_curves.pdf"), plts_coxphR, width = 10, height = 8)
+```
+
+Estimate ending probabilities
+
+```{r get algal-crab line}
+ggsurvplot(a.fitR, legend.labs=c("Algae", "Crab + Algae", "Control"),
+             ggtheme = theme_classic(base_size = fnt_sz), 
+             legend = leg_pos,
+             palette = c(forGreen , lightO, "darkgray"), 
+             legend.title = "(c)", conf.int = TRUE, 
+             conf.int.alpha=0.1, 
+             xlab="Time (days)")$plot +
+  geom_hline(yintercept = 0.15) +
+  geom_hline(yintercept = 0.01)
+```
+
+```{r get wounding line}
+ggsurvplot(cw.fitR, legend.labs=c("C+W", "C", "W", "Control"),
+             ggtheme = theme_classic(base_size = fnt_sz), 
+             legend = leg_pos,
+             palette = c(vibRed, skyB, darkO, "darkgray"), 
+             legend.title = "(d)", 
+             conf.int = TRUE, 
+             conf.int.alpha=0.1, 
+             xlab="Time (days)")$plot +
+  geom_hline(yintercept = 0.935) 
+```
+
+
+

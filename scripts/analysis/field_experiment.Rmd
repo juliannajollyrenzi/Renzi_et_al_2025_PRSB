@@ -1,0 +1,155 @@
+---
+title: "Field data explore"
+author: "Julianna Renzi"
+date: "3/3/2023"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# clear the workspace
+rm(list = ls())
+
+# load required packages
+require(tidyverse)
+require(here)
+require(nlme)
+require(emmeans)
+require(RColorBrewer)
+```
+
+# Read in algae data
+
+Note: "NW" is no wounding and "W" is wounding. See methods for more details.
+
+```{r}
+# algal weight pre/post experiment
+algae <- read_csv(here("july2024_updates/data/field_experiment/algae_weight.csv"))
+
+# information on colony size (for summary stat in text)
+size <- read_csv(here("july2024_updates/data/field_experiment/colony_specs.csv")) 
+
+# daily monitoring of whether algae was present or not
+monitoring <- read_csv(here("july2024_updates/data/field_experiment/algal_monitoring.csv")) 
+```
+
+# Get average colony size 
+
+```{r}
+# mean diameter
+mean(size$length_cm)
+  
+# SE diameter
+sd(size$length_cm)/sqrt(length(size$length_cm))
+```
+
+# Biomass data
+
+## Make sure initial treatments were the same
+
+```{r get initial weight df}
+algae %>% 
+  select(NW_algae_initial_weight, W_algae_intial_weight, Colony_ID) %>% 
+  pivot_longer(cols = c(NW_algae_initial_weight, W_algae_intial_weight),
+               names_to = "Treatment", 
+               values_to = "Biomass") -> init_biomass
+
+```
+
+```{r calculate mean starting biomass}
+init_biomass %>% 
+  summarize(Mean_biom = mean(Biomass),
+            N = sqrt(n()),
+            sd_biom = sd(Biomass),
+            se_biom = sd_biom/N)
+```
+
+```{r look for differences in starting weights}
+init.M <- aov(Biomass ~ Treatment, data = init_biomass)
+  summary(init.M) # looks okay (p > 0.05)
+```
+
+## Compare treatments
+
+```{r calculate percent change}
+algae %>% 
+  # get absolute change
+  mutate(NW_change = NW_algae_initial_weight - NW_final_weight,
+         W_change = W_algae_intial_weight - W_final_weight) %>%
+  # get percent change
+  mutate(NW_perc_change = NW_change/NW_algae_initial_weight,
+         W_perc_change = W_change/W_algae_intial_weight) %>%
+  select(Colony_ID, NW_perc_change, W_perc_change) %>% 
+  pivot_longer(cols = c(NW_perc_change, W_perc_change),
+               names_to = "Treatment", 
+               values_to = "Percent_change") -> perc_change
+```
+
+## Plot results
+
+```{r plot percent differences}
+# pdf(here("july2024_updates/figures/field_algal_loss.pdf"), height = 4, width = 6)
+
+perc_change %>% 
+  # get this in terms of percents (out of 100)
+  mutate(Percent_change = 100*Percent_change) %>% 
+  ggplot(aes(x = Treatment, y = Percent_change, fill = Treatment)) +
+  geom_boxplot() +
+  ylab("Biomass loss (%)") +
+  scale_fill_brewer(palette="Oranges") + 
+  geom_point(alpha = 0.5) +
+  theme_classic() +
+  theme(text = element_text(size=18), legend.position="none") +
+  xlab("") +
+  # rename categories
+  scale_x_discrete(labels = c('No wounding','Wounding'))
+
+# dev.off()
+```
+
+## Model
+
+We want to model the difference in biomass loss, with a random effect for coral colony, since we use a paired design with 1 patch of each treatment/coral in case there are differences in flow, community composition, etc.
+
+```{r}
+m.PercRE <- lme(Percent_change~Treatment, 
+                random=~1|Colony_ID, 
+                data=perc_change)
+  summary(m.PercRE)
+  anova(m.PercRE) 
+  emmeans(m.PercRE, "Treatment")
+```
+
+# Monitoring
+
+Examine changes in clump presence through time using the monitoring data
+
+```{r plot}
+# pdf(here("july2024_updates/figures/field_monitoring.pdf"), height = 5.5, width = 7)
+
+monitoring %>% 
+  # clean up for figure
+  mutate(treatment = case_when(treatment == "NW" ~ "No wounding",
+                               TRUE ~ "Wounding")) %>% 
+  mutate(`Algae present` = case_when(algae_remaining_yn == 1 ~ "Y",
+                                     TRUE ~ "N"
+                                     )) %>% 
+  ggplot(aes(x = time_point, fill = `Algae present`, group = `Algae present`)) +
+  geom_bar(stat = "count") +
+  facet_wrap(~treatment, ncol = 1) +
+  geom_hline(yintercept = 18, color = "gray", linetype = "dashed") +
+  geom_hline(yintercept = 16, color = "black", linetype = "dashed") +
+  theme_classic() +
+  theme(text = element_text(size=18)) +
+  xlab("Day") +
+  ylab("Number of replicates") +
+  scale_fill_manual(values = c(wes_palette("Darjeeling1", n = 5)[4],
+                    wes_palette("Darjeeling1", n = 5)[2]))
+
+# dev.off()
+```
+
+
