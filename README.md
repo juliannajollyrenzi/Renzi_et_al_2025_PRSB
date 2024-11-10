@@ -25,14 +25,6 @@ Institution: University of California, Santa Barbara
 Email: jrenzi@ucsb.edu
 ```
 
-###### Principle Investigator Contact Information
-
-```
-Name: Brian Silliman
-Institution: Duke University
-Email: brian.silliman@duke.edu
-```
-
 ## Dataset Overview
 
 This dataset contains the data required to replicate analyses in Renzi et al. (in review), examining the effects of a common coral-dwelling crab on coral health.
