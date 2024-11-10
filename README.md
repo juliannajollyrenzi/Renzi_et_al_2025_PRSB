@@ -47,7 +47,7 @@ Davies, S. (1989). Short-term growth measurements of corals using an accurate bu
 
 Schneider, C.A., Rasband, W.S., Eliceiri, K.W. (2012). NIH Image to ImageJ: 25 years of image analysis. Nature methods, 9(7):671-5.
 
-# Files
+# Data files
 
 ## Field surveys
 
