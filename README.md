@@ -95,7 +95,7 @@ Schneider, C.A., Rasband, W.S., Eliceiri, K.W. (2012). NIH Image to ImageJ: 25 y
 
 *Mesocosm experiment*
 
-**Description:** Daily estimates of tissue loss on experimental corals. The front and back of fragments were photographed daily and estimates made from photographs.
+**Description:** Daily estimates of tissue loss on experimental corals. The front and back of fragments were photographed daily and estimates made from photographs. The two sides were averaged together to get approximate tissue loss for a given day.
 
 ##### Variables
 
@@ -308,7 +308,7 @@ Schneider, C.A., Rasband, W.S., Eliceiri, K.W. (2012). NIH Image to ImageJ: 25 y
 
 *Field experiment*
 
-**Description:** 
+**Description:** Monitoring data from visual surveys of algal clumps each day of the field experiment.
 
 ##### Variables
 
@@ -317,7 +317,6 @@ Schneider, C.A., Rasband, W.S., Eliceiri, K.W. (2012). NIH Image to ImageJ: 25 y
 * time_point: Day of the field experiment on which the observation was made; on the seventh day, algal clumps were carefully removed from the patch and reweighed
 * treatment: Experimental treatment; NW = no wound/control, W = wounded
 * notes: Notes
-
 
 ## Behavioral trials
 
@@ -339,7 +338,7 @@ Schneider, C.A., Rasband, W.S., Eliceiri, K.W. (2012). NIH Image to ImageJ: 25 y
 
 *Behavioral trials*
 
-**Description:** Point contact data used for approximating the percent cover of live tissue, the zone of recent tissue loss, and the margin on each coral fragment used in feeding video trials. The grid was created using a uniform grid in ImageJ (Schneider et al. 2012)
+**Description:** Point contact data used for approximating the percent cover of live tissue, the zone of recent tissue loss, and the margin between living and dead on each coral fragment used in feeding video trials. The grid was created using a uniform grid in ImageJ (Schneider et al. 2012)
 
 ##### Variables
 
@@ -354,7 +353,7 @@ Schneider, C.A., Rasband, W.S., Eliceiri, K.W. (2012). NIH Image to ImageJ: 25 y
 
 *Behavioral trials*
 
-**Description:** To test whether *C. ungulatus *reduces macroalgal biomass in tanks, we placed crabs in containers with macroalgae and monitored biomass removal over three days. Each algal clump was spun for 60 seconds and weighed before and after the trial to calculate biomass loss and percent biomass loss. Given that there were holes in each container to allow for water flow, we also ran 8 control trials to approximate background algal loss rate.
+**Description:** To test whether *C. ungulatus* reduces macroalgal biomass in tanks, we placed crabs in containers with macroalgae and monitored biomass removal over three days. Each algal clump was spun for 60 seconds and weighed before and after the trial to calculate biomass loss and percent biomass loss. Given that there were holes in each container to allow for water flow, we also ran 8 control trials to approximate background algal loss rate.
 
 ##### Variables
 
