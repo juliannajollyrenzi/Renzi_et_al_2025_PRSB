@@ -55,9 +55,9 @@ Davies, S. (1989). Short-term growth measurements of corals using an accurate bu
 
 Schneider, C.A., Rasband, W.S., Eliceiri, K.W. (2012). NIH Image to ImageJ: 25 years of image analysis. Nature methods, 9(7):671-5.
 
-## Files
+# Files
 
-### Field surveys
+## Field surveys
 
 #### File: benthic\_survey.csv
 
@@ -86,7 +86,7 @@ Schneider, C.A., Rasband, W.S., Eliceiri, K.W. (2012). NIH Image to ImageJ: 25 y
 * Substrate_type: classification of which part of the *A. aspera* colony the *Cyclodius* crab was on (i.e., living tissue, dead, or the boundary between living and dead). No_cyclodius means that there were no crabs observed for a colony.
 * Cyclodius: the abundance of *Cyclodius* crabs in each category on a given colony
 
-### Mesocosm experiment
+## Mesocosm experiment
 
 #### File: initial\_buoyant\_weights.csv
 
@@ -129,6 +129,18 @@ Schneider, C.A., Rasband, W.S., Eliceiri, K.W. (2012). NIH Image to ImageJ: 25 y
 * Crab_size_mm_initial: Carapace length, in mm, of the crab added; NA written if the coral was not in a crab treatment
 * HOBO_ID: HOBO temperature logger identifier, if one was attached to the unit; NA was written if there was not a temperature logger attached
 * Initial_algal_biomass_g: Initial algal biomass, in grams, added to corals in macroalgal treatments; NA was written if the coral was not in a macroalgal treatment 
+
+#### File: HOBO\_metadata.csv
+
+*Temperature: mesocosm experiment*
+
+**Description:** Metadata for temperature logger CSVs
+
+##### Variables
+
+* Hobo_ID: HOBO identifier
+* Tank: Tank identifier that the logger was recording from
+* Date_pulled: Day the logger was pulled from the mesocosm experiment
 
 #### File: 10550964.csv
 
@@ -214,18 +226,6 @@ Schneider, C.A., Rasband, W.S., Eliceiri, K.W. (2012). NIH Image to ImageJ: 25 y
 * Plot Title: HOBO logger ID--see logger metadata for information on tank placement
 * 10550962: Information below is the un-modified logger information, including temperature, date, and light intensity
 
-#### File: HOBO\_metadata.csv
-
-*Temperature: mesocosm experiment*
-
-**Description:** Metadata for temperature logger CSVs
-
-##### Variables
-
-* Hobo_ID: HOBO identifier
-* Tank: Tank identifier that the logger was recording from
-* Date_pulled: Day the logger was pulled from the mesocosm experiment
-
 #### File: 10551954.csv
 
 *Temperature: mesocosm experiment*
@@ -281,7 +281,7 @@ Schneider, C.A., Rasband, W.S., Eliceiri, K.W. (2012). NIH Image to ImageJ: 25 y
 * Plot Title: HOBO logger ID--see logger metadata for information on tank placement
 * 10551956: Information below is the un-modified logger information, including temperature, date, and light intensity
 
-### Field experiment
+## Field experiment
 
 #### File: colony\_specs.csv
 
@@ -327,7 +327,7 @@ Schneider, C.A., Rasband, W.S., Eliceiri, K.W. (2012). NIH Image to ImageJ: 25 y
 * notes: Notes
 
 
-### Behavioral trials
+## Behavioral trials
 
 #### File: crab\_feeding\_behavior.csv
 
