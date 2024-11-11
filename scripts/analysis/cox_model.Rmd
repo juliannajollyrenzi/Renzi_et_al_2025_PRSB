@@ -171,15 +171,15 @@ Now we will plot survival curves as a function of the different treatments using
 First, create survfit() objects using our Cox model and the treatments we're interested in plotting
 
 ```{r get survfits}
-# first for crabs AND algae + crab + control:
-crab_df <- with(surv_df,
-               data.frame(Crab_treatment = c("Y", "Y", "N"), 
-                          Algae_treatment = c("N", "Y", "N"),
-                          Wounding_treatment = c("N", "N", "N")))
+# first for crabs AND algae + crab + control + algae:
+crab_algae_df <- with(surv_df,
+               data.frame(Crab_treatment = c("Y", "Y", "N", "N"), 
+                          Algae_treatment = c("N", "Y", "N", "Y"),
+                          Wounding_treatment = c("N", "N", "N", "N")))
   
-c.fitR <- survfit(mCoxR, newdata = crab_df, data = surv_df)
+c.a.fitR <- survfit(mCoxR, newdata = crab_algae_df, data = surv_df)
 
-# for algae AND algae + crab + control:
+# for crab, wounding, wounding AND crab:
 alg_df <- with(surv_df,
                 data.frame(Crab_treatment = c("N", "Y", "N"), 
                            Algae_treatment = c("Y", "Y", "N"),
@@ -219,14 +219,16 @@ arrange_ggsurvplots(list(
              legend = leg_pos,
              palette = c(skyB, lightO, "darkgray"), 
              legend.title = "(a)", conf.int.alpha = 0.1, 
-             xlab="Time (days)"),
+             xlab="Time (days)",
+             ylab="Probability"),
   ggsurvplot(a.fitR, legend.labs=c("Algae", "Crab + Algae", "Control"),
              ggtheme = theme_classic(base_size = fnt_sz), 
              legend = leg_pos,
              palette = c(forGreen , lightO, "darkgray"), 
              legend.title = "(c)", conf.int = TRUE, 
              conf.int.alpha=0.1, 
-             xlab="Time (days)"),
+             xlab="Time (days)",
+             ylab="Probability"),
   ggsurvplot(w.fitR, data = surv_df, legend.labs=c("Wounding", "Control"),
              ggtheme = theme_classic(base_size = fnt_sz), 
              legend = leg_pos,
@@ -234,7 +236,8 @@ arrange_ggsurvplots(list(
              legend.title = "(b)", 
              conf.int = TRUE, 
              conf.int.alpha=0.1, 
-             xlab="Time (days)"),
+             xlab="Time (days)",
+             ylab="Probability"),
   ggsurvplot(cw.fitR, legend.labs=c("C+W", "C", "W", "Control"),
              ggtheme = theme_classic(base_size = fnt_sz), 
              legend = leg_pos,
@@ -242,7 +245,8 @@ arrange_ggsurvplots(list(
              legend.title = "(d)", 
              conf.int = TRUE, 
              conf.int.alpha=0.1, 
-             xlab="Time (days)")),
+             xlab="Time (days)",
+             ylab="Probability")),
   ncol = 2, nrow = 2) -> plts_coxphR
 
 ```
