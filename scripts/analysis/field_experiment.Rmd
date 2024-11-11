@@ -19,6 +19,8 @@ require(here)
 require(nlme)
 require(emmeans)
 require(RColorBrewer)
+require(survival) # for creating survival objects
+require(coxme) # for creating cox mixed effects models
 ```
 
 # Read in algae data
@@ -152,4 +154,41 @@ monitoring %>%
 # dev.off()
 ```
 
+# Survival analysis
+
+Referee 2 recommended doing a formal analysis here, which we are trying. See below:
+
+```{r make survival dataframe}
+# get a key of all patches
+monitoring %>% 
+  group_by(Colony_ID, treatment) %>% 
+  summarize(N = n()) %>% 
+  select(-N) -> colonies
+
+# calculate days the algae were lost
+monitoring %>% 
+  filter(algae_remaining_yn == 0) %>% 
+  # get the first day a patch lost it's algae
+  group_by(Colony_ID, treatment) %>% 
+  summarize(first_day_gone = min(time_point)) %>% 
+  full_join(colonies) %>% 
+  mutate(censor = case_when(is.na(first_day_gone) ~ 0,
+                            TRUE ~ 1)) %>% 
+  mutate(first_day_gone = case_when(is.na(first_day_gone) ~ 6,
+                                    TRUE ~ first_day_gone)) -> algal_survival
+```
+
+
+```{r make survival object}
+surv_object_alg <- Surv(time = algal_survival$first_day_gone, # time to death
+                    event = algal_survival$censor) # Censored points: 0 = right censored (not a true death), 1 = event at time
+```
+
+Make a Cox model
+
+```{r full model}
+cox.model <- coxph(surv_object_alg ~ treatment + cluster(Colony_ID), 
+                    data = algal_survival) # note response here must be a survival object returned by the Surv funtion (why we make the surv_object above)
+  summary(cox.model)
+```
 
