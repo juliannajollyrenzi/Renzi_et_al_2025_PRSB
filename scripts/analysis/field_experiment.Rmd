@@ -205,9 +205,8 @@ test.ph <- cox.zph(cox.model)
 Then we'll also test whether there's strong outlier pull/influential observations
 
 ```{r look for outliers}
-ggcoxdiagnostics(cox.model, type = "dfbeta", # dfbeta "plots the estimated changes in the regression coefficients upon deleting each observation in turn"
+ggcoxdiagnostics(cox.model, type = "dfbeta", # dfbeta plots the estimated changes in the regression coefficients upon deleting each observation in turn
                  ggtheme = theme_bw()) 
 ```
 
-- These look fairly symmetric so are going to leave everything as-is
-
+- These seem all right
