@@ -192,3 +192,22 @@ cox.model <- coxph(surv_object_alg ~ treatment + cluster(Colony_ID),
   summary(cox.model)
 ```
 
+# Test model assumptions
+
+We want to test that the hazards are proportional (don't change over time), which is assumed in the coxph model. We'll use scaled Schoenfeld residuals, which are independent of time and should have a random pattern. The random assumption is supported by p > 0.05
+
+```{r test Schoenfeld}
+test.ph <- cox.zph(cox.model) 
+  test.ph # meets this assumption (p > 0.05)
+  ggcoxzph(test.ph) # no pattern with time
+```
+
+Then we'll also test whether there's strong outlier pull/influential observations
+
+```{r look for outliers}
+ggcoxdiagnostics(cox.model, type = "dfbeta", # dfbeta "plots the estimated changes in the regression coefficients upon deleting each observation in turn"
+                 ggtheme = theme_bw()) 
+```
+
+- These look fairly symmetric so are going to leave everything as-is
+
