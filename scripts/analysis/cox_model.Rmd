@@ -180,28 +180,12 @@ crab_algae_df <- with(surv_df,
 c.a.fitR <- survfit(mCoxR, newdata = crab_algae_df, data = surv_df)
 
 # for crab, wounding, wounding AND crab:
-alg_df <- with(surv_df,
-                data.frame(Crab_treatment = c("N", "Y", "N"), 
-                           Algae_treatment = c("Y", "Y", "N"),
-                           Wounding_treatment = c("N", "N", "N")))
+crab_wounding_df <- with(surv_df,
+                data.frame(Crab_treatment = c("Y", "Y", "N"), 
+                           Algae_treatment = c("N", "N", "N"),
+                           Wounding_treatment = c("Y", "N", "Y")))
 
-a.fitR <- survfit(mCoxR, newdata = alg_df, data = surv_df)
-
-# for JUST wounding:
-w_df <- with(surv_df,
-               data.frame(Crab_treatment = c("N", "N"), 
-                          Algae_treatment = c("N", "N"),
-                          Wounding_treatment = c("Y", "N")))
-
-w.fitR <- survfit(mCoxR, newdata = w_df, data = surv_df)
-
-# for wounding AND crab interaction
-CW_df <- with(surv_df,
-                data.frame(Crab_treatment = c("Y", "Y", "N", "N"), 
-                           Algae_treatment = c("N", "N", "N", "N"),
-                           Wounding_treatment = c("Y", "N", "Y", "N")))
-
-cw.fitR <- survfit(mCoxR, newdata = CW_df, data = surv_df)
+c.w.fitR <- survfit(mCoxR, newdata = crab_wounding_df, data = surv_df)
 
 ```
 
@@ -214,47 +198,28 @@ fnt_sz <- 15
 leg_pos <- "top"
 
 arrange_ggsurvplots(list(
-  ggsurvplot(c.fitR, conf.int = TRUE, legend.labs=c("Crab", "Crab + Algae", "Control"),
+  ggsurvplot(c.a.fitR, conf.int = TRUE, legend.labs=c("Crab", "Crab + Algae", "Control", "Algae"),
              ggtheme = theme_classic(base_size = fnt_sz),
              legend = leg_pos,
-             palette = c(skyB, lightO, "darkgray"), 
+             palette = c(skyB, lightO, "darkgray", forGreen), 
              legend.title = "(a)", conf.int.alpha = 0.1, 
              xlab="Time (days)",
              ylab="Probability"),
-  ggsurvplot(a.fitR, legend.labs=c("Algae", "Crab + Algae", "Control"),
+  ggsurvplot(c.w.fitR, legend.labs=c("Crab + Wounding", "Crab", "Wounding"),
              ggtheme = theme_classic(base_size = fnt_sz), 
              legend = leg_pos,
-             palette = c(forGreen , lightO, "darkgray"), 
-             legend.title = "(c)", conf.int = TRUE, 
+             palette = c(vibRed, skyB, darkO), 
+             legend.title = "(b)", conf.int = TRUE, 
              conf.int.alpha=0.1, 
              xlab="Time (days)",
-             ylab="Probability"),
-  ggsurvplot(w.fitR, data = surv_df, legend.labs=c("Wounding", "Control"),
-             ggtheme = theme_classic(base_size = fnt_sz), 
-             legend = leg_pos,
-             palette = c(darkO, "darkgray"), 
-             legend.title = "(b)", 
-             conf.int = TRUE, 
-             conf.int.alpha=0.1, 
-             xlab="Time (days)",
-             ylab="Probability"),
-  ggsurvplot(cw.fitR, legend.labs=c("C+W", "C", "W", "Control"),
-             ggtheme = theme_classic(base_size = fnt_sz), 
-             legend = leg_pos,
-             palette = c(vibRed, skyB, darkO, "darkgray"), 
-             legend.title = "(d)", 
-             conf.int = TRUE, 
-             conf.int.alpha=0.1, 
-             xlab="Time (days)",
-             ylab="Probability")),
-  ncol = 2, nrow = 2) -> plts_coxphR
+             ylab="Probability"))) -> plts_coxphR
 
 ```
 
 Save figure
 
 ```{r save figure}
-ggsave(here("figures/survival_curves.pdf"), plts_coxphR, width = 10, height = 8)
+ggsave(here("figures/survival_curves.pdf"), plts_coxphR, width = 10, height = 4)
 ```
 
 Estimate ending probabilities
