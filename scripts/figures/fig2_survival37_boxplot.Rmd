@@ -43,7 +43,7 @@ skyB <- wes_palette("Darjeeling1", n = 5)[5]
 For crab carapace
 
 ```{r average crab carapace}
-# mean algal biomass (reported in text)
+# mean crab carapace (reported in text)
 mean(surv_df$Crab_size_mm_initial, na.rm = TRUE)
 
 # standard error

@@ -64,9 +64,9 @@ algae %>%
 ```{r calculate mean starting biomass}
 init_biomass %>% 
   summarize(Mean_biom = mean(Biomass),
-            N = sqrt(n()),
+            sq_N = sqrt(n()),
             sd_biom = sd(Biomass),
-            se_biom = sd_biom/N)
+            se_biom = sd_biom/sq_N)
 ```
 
 ```{r look for differences in starting weights}

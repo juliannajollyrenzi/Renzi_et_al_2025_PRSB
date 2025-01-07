@@ -54,7 +54,7 @@ surv_object <- Surv(time = surv_df$Delta_time, # time to death
 
 ## Cox model
 
-Now we can use the survival objec to create a full (i.e., all possible interaction terms) cox proportional hazards regression model, with a random effect for Tank ID. Note that a hazard ratio (HR) > 1 is an increased risk of "death: and HR < 1 is a decreased risk.
+Now we can use the survival object to create a full (i.e., all possible interaction terms) cox proportional hazards regression model with a random effect for Tank ID. Note that a hazard ratio (HR) > 1 is an increased risk of "death: and HR < 1 is a decreased risk.
 
 ```{r full model}
 full.coxphR <- coxph(surv_object ~ Crab_treatment * Algae_treatment * Wounding_treatment + cluster(Tank_ID), 

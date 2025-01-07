@@ -142,7 +142,7 @@ coxph.3R <- coxph(surv_object ~ Crab_treatment + Algae_treatment + Wounding_trea
                    Crab_treatment:Wounding_treatment + cluster(Tank_ID),
                  data = surv_df)
 
-AIC(coxph.3, coxph.3W) # looks like no big difference with the size/weight term
+AIC(coxph.3R, coxph.3W) # looks like no big difference with the size/weight term
 ```
 
 # 2. Was initial tissue loss important?
@@ -264,7 +264,7 @@ AIC(full.coxphTL, coxph.1TL, coxph.2TL, coxph.3TL, coxph.4TL, coxph.5TL, coxph.6
 summary(coxph.3TL) # see coefficients/significance seem the same and there is no strong effect of starting TL
 
 # Also check whether there's a difference in model fit with or without starting TL
-AIC(coxph.3TL, coxph.3) # if anything the one without tissue loss is better
+AIC(coxph.3TL, coxph.3R) # if anything the one without tissue loss is better
 ```
 
 
