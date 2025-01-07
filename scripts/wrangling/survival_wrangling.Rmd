@@ -45,17 +45,18 @@ coralTL %>%
 
 # Make a survival dataframe 
 
-This code analyses the survival data with the most conservative threshold of 37.5% tissue loss (i.e., the least amount of tissue loss exhibited by a coral fragment that was pulled from the experiment for sampling), which was recommended by a previous reviewer and is likely a better approach (compared to the actual day they were pulled, which could vary in final percent tissue loss), although note that the overall conclusions are the same for both approaches.
+This code analyzes the survival data with the most conservative threshold of 37.5% tissue loss (i.e., the least amount of tissue loss exhibited by a coral fragment that was pulled from the experiment for sampling), which was recommended by a previous reviewer and is likely a better approach (compared to the actual day they were pulled, which could vary in final percent tissue loss), although note that the general conclusions are the same for both approaches.
 
 ```{r}
 coralMTL %>% 
-  # look for the first day a coral hit this % tissue loss
+  # look for the first day a coral hit 37.5% tissue loss
   filter(Mean_TL >= 37.50) %>% 
   group_by(Coral_ID) %>% 
   summarize(Death_day = min(Date)) %>% 
   # join with metadata
   full_join(metadat) %>% 
   # deal with the two corals that broke--these were not true "deaths" but they were removed from the experiment on these specific days
+  # we will need to censor them later
   mutate(Death_day = case_when(Coral_ID == 7 ~ as.Date("2020-02-14"), 
                                Coral_ID == 29 ~ as.Date("2020-02-16"),
                                TRUE ~ Death_day)) %>% 
