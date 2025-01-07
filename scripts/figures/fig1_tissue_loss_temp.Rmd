@@ -59,7 +59,7 @@ tempTimeseries %>%
   geom_line() +
   geom_hline(yintercept = 28.3, 
              color = vibRed, 
-             linetype = "dotted") + # this is the Heron monthly mean water temp according to: https://seatemperature.info/heron-island-water-temperature.html and also JB
+             linetype = "dotted") + # this is the Heron MMM + 1 deg C according to JB and Brown et al. 2023
   theme_classic() +
   # make first rectangle highlighting the first peak 
   annotate("rect",
@@ -89,6 +89,8 @@ Get the average tissue loss by treatment (average tissue loss across the treatme
 
 ```{r}
 tissueLoss %>% 
+  # just include corals below the 37.5% threshold so this figure mirrors the survival analysis
+  filter(Cum_TL < 37.5) %>% 
   group_by(Crab_treatment, Algae_treatment, Wounding_treatment, Date) %>%
   summarize(MeanTL = mean(Perc_tissue_loss)) -> avgTL
 ```
@@ -129,7 +131,6 @@ avgTL %>%
   # change text size
   theme(text = element_text(size = txt_sz),
         legend.position = "top") +
-    ylim(0, 43) +
   ggtitle("(b)") -> TLfig
 ```
 
@@ -142,7 +143,7 @@ avgTL %>%
 Save these figures as a PDF in the figures folder
 
 ```{r}
-pdf(file = here("figures/tissue_loss_temperature.pdf"), width = 8.5, height = 9)
+pdf(file = here("figures/fig_1_tissue_loss_temperature.pdf"), width = 8.5, height = 9)
 
 tempTSFig / TLfig
 

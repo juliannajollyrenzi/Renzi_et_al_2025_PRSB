@@ -42,15 +42,15 @@ Use these data to calculate the change in tissue loss among time points
 # summarize tissue loss for each date (average both coral sides to get one average/coral)
 coralTL %>% 
   group_by(Coral_ID, Date) %>% # average for both sides (front & back)
-  summarize(Cum_TL = mean(Percent_dead)) %>% # this is cumulative
+  summarize(Cum_TL = mean(Percent_dead)) %>% # this is cumulative tissue loss
   # add in metadata
   full_join(metadat) %>% 
   # they should be in order, but just to be sure:
   arrange(Coral_ID, Date) %>% 
   # calculate the change in percent cover since the last day
   mutate(Perc_tissue_loss = case_when(
-    # for starting entries, want the change to be 0 (initial value)
-    Date == as.Date("2020-01-31") ~ 0,
+    # for starting entries, want the change to just be the starting value
+    Date == as.Date("2020-01-31") ~ Cum_TL,
     # otherwise, want it to be the difference between itself and the record above it (previous time step)
     TRUE ~ (Cum_TL - lag(Cum_TL))
     )) -> tissueLoss # note: there are very small negative values for 11 and 15, but that was because they seemed to be healing slightly

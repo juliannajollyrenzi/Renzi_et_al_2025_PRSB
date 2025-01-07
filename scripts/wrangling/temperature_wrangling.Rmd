@@ -36,7 +36,7 @@ hob_ID <- hob_ID[[1]][1] # get logger ID
 name <- paste("h", hob_ID, sep="") # get name of the file that we'll use to refer to the csv (h for HOBO)
 
 # rename columns to be more useful
-name <- read_csv(here(paste("data/HOBO_temperature_loggers/CSVs/", hob_filelist[1], sep = "")), skip=1) 
+name <- read_csv(here(paste("data/HOBO_temperature_loggers/CSVs/", hob_filelist[1], sep = "")), skip=1)  
   colnames(name)[1] <- "Data_point"
   colnames(name)[2] <- "Date_time"
   colnames(name)[3] <- "Temp_C" 
@@ -88,7 +88,7 @@ l2 <- sort(unique(as.numeric(hob_metadat$Hobo_ID)))
 
 for (id in l1){
   if (id %in% l2){
-    print("YEET")
+    print("YEE")
   } else {
     print("Nawhh")
   }
@@ -98,14 +98,17 @@ for (id in l1){
 l1 == l2
 
 # then join the metadata to the temperature data
-label_temp <- left_join(temp_data, hob_metadat, by="Hobo_ID") 
+label_temp <- left_join(temp_data, 
+                        hob_metadat, 
+                        by="Hobo_ID", 
+                        relationship = "many-to-many") 
 ```
 
 # Begin summarizing the temperature data
 
 ```{r}
 # look for earliest date
-label_temp$Date_time %>% min # Jan 26 (corals started acclimating )
+label_temp$Date_time %>% min # Jan 26 (corals acclimating)
 
 label_temp %>% 
   filter(Tank != 21) %>% # don't want the control tank we didn't use
@@ -116,14 +119,14 @@ label_temp %>%
   mutate(Date_time = ifelse(Hobo_ID == as.character(10551953) & Date_time >  as.Date("2020-02-05"), NA, Date_time)) %>% 
   mutate(Date_time = ifelse(Hobo_ID == as.character(10551958) & Date_time >  as.Date("2020-02-11"), NA, Date_time)) %>% 
   filter(!is.na(Date_time)) %>% 
-  mutate(Date_time = as_datetime(Date_time)) -> temp_filt_cumm # don't know why I have to do this again, but they converted back to numbers
+  mutate(Date_time = as_datetime(Date_time)) -> temp_filt_1 # convert back
 
 ```
 
 Get an average temperature value per day-time across tanks
 
 ```{r}
-temp_filt_cumm %>% 
+temp_filt_1 %>% 
   group_by(Date_time) %>% 
   summarise(Mean_temp = mean(Temp_C)) %>% 
   mutate(Day = date(Date_time)) -> temp_time_avgs # create a line for each day-time (can be multiple loggers recording at the same date-time, but want one value as a mean across tanks)
