@@ -104,9 +104,9 @@ surv_df %>%
 Plot them together
 
 ```{r}
-# pdf(here("figures/surival_boxplts.pdf"), height = 9, width = 7.5)
+pdf(here("figures/fig_2_surival_boxplts.pdf"), height = 9, width = 7.5)
 
 boxp.nowound / boxp.wound
 
-# dev.off()
+dev.off()
 ```
