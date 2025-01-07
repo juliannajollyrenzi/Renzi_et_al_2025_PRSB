@@ -1,5 +1,5 @@
-# Renzi_et_al_202X
-Data and analysis for Renzi et al. 202X: An abundant mutualist can protect corals from multiple stressors
+# Renzi et al. 2025
+Data and analysis for Renzi et al. 2025: An abundant mutualist can protect corals from multiple stressors
 
 - `data` folder contains all original data from the project
 - `figures` folder stores figure outputs from code
@@ -35,7 +35,7 @@ All research was conducted on Heron Island, a small (0.29 km2) coral cay in the 
 
 ### Recommended Citation
 
-Julianna J. Renzi, Joseph P. Morton, Jessica L. Bergman, Devin Rowell, Edwin S. Iversen Jr., Leo C. Gaskins, Juliana Hoehne-Diana, and Brian R. Silliman. In Review. An abundant mutualist can protect corals from multiple stressors.
+Julianna J. Renzi, Joseph P. Morton, Jessica L. Bergman, Devin Rowell, Edwin S. Iversen Jr., Leo C. Gaskins, Juliana Hoehne-Diana, and Brian R. Silliman (2025). An abundant mutualist can protect corals from multiple stressors. Proceedings of the Royal Society B: Biological Sciences.
 
 ### Acknowledgements
 
