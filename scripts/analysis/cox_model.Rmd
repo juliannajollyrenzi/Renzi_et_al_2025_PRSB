@@ -219,16 +219,16 @@ arrange_ggsurvplots(list(
 Save figure
 
 ```{r save figure}
-ggsave(here("figures/survival_curves.pdf"), plts_coxphR, width = 10, height = 4)
+ggsave(here("figures/fig_3_survival_curves.pdf"), plts_coxphR, width = 10, height = 4)
 ```
 
-Estimate ending probabilities
+Estimate ending probabilities for reference in the text
 
 ```{r get algal-crab line}
-ggsurvplot(a.fitR, legend.labs=c("Algae", "Crab + Algae", "Control"),
+ggsurvplot(c.a.fitR, legend.labs=c("Crab", "Crab + Algae", "Control", "Algae"),
              ggtheme = theme_classic(base_size = fnt_sz), 
              legend = leg_pos,
-             palette = c(forGreen , lightO, "darkgray"), 
+             palette = c(skyB, lightO, "darkgray", forGreen), 
              legend.title = "(c)", conf.int = TRUE, 
              conf.int.alpha=0.1, 
              xlab="Time (days)")$plot +
@@ -237,10 +237,10 @@ ggsurvplot(a.fitR, legend.labs=c("Algae", "Crab + Algae", "Control"),
 ```
 
 ```{r get wounding line}
-ggsurvplot(cw.fitR, legend.labs=c("C+W", "C", "W", "Control"),
+ggsurvplot(c.w.fitR, legend.labs=c("Crab + Wounding", "Crab", "Wounding"),
              ggtheme = theme_classic(base_size = fnt_sz), 
              legend = leg_pos,
-             palette = c(vibRed, skyB, darkO, "darkgray"), 
+             palette = c(vibRed, skyB, darkO), 
              legend.title = "(d)", 
              conf.int = TRUE, 
              conf.int.alpha=0.1, 
