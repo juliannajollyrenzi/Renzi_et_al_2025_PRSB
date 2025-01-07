@@ -93,7 +93,7 @@ algae %>%
 ## Plot results
 
 ```{r plot percent differences}
-# pdf(here("figures/field_algal_loss.pdf"), height = 4, width = 6)
+pdf(here("figures/fig_4_field_algal_loss.pdf"), height = 4, width = 6)
 
 perc_change %>% 
   # get this in terms of percents (out of 100)
@@ -109,7 +109,7 @@ perc_change %>%
   # rename categories
   scale_x_discrete(labels = c('No wounding','Wounding'))
 
-# dev.off()
+dev.off()
 ```
 
 ## Model
@@ -122,7 +122,7 @@ m.PercRE <- lme(Percent_change~Treatment,
                 data=perc_change)
   summary(m.PercRE)
   anova(m.PercRE) 
-  emmeans(m.PercRE, "Treatment")
+  emmeans::contrast(emmeans(m.PercRE, "Treatment")) # just double checking we get the same result with different packages
 ```
 
 # Monitoring
@@ -130,14 +130,16 @@ m.PercRE <- lme(Percent_change~Treatment,
 Examine changes in clump presence through time using the monitoring data
 
 ```{r plot}
-# pdf(here("figures/field_monitoring.pdf"), height = 5.5, width = 7)
+pdf(here("figures/fig_S5_field_monitoring.pdf"), height = 5.5, width = 7)
 
 monitoring %>% 
   # clean up for figure
   mutate(treatment = case_when(treatment == "NW" ~ "No wounding",
-                               TRUE ~ "Wounding")) %>% 
+                               treatment == "W" ~ "Wounding",
+                               TRUE ~ "PROBLEM")) %>% 
   mutate(`Algae present` = case_when(algae_remaining_yn == 1 ~ "Y",
-                                     TRUE ~ "N"
+                                     algae_remaining_yn == 0 ~ "N",
+                                     TRUE ~ "PROBLEM"
                                      )) %>% 
   ggplot(aes(x = time_point, fill = `Algae present`, group = `Algae present`)) +
   geom_bar(stat = "count") +
@@ -151,12 +153,12 @@ monitoring %>%
   scale_fill_manual(values = c(wes_palette("Darjeeling1", n = 5)[4],
                     wes_palette("Darjeeling1", n = 5)[2]))
 
-# dev.off()
+dev.off()
 ```
 
 # Survival analysis
 
-Referee 2 recommended doing a formal analysis here, which we are trying. See below:
+Based on a helpful suggestion from a reviewer, we also do a formal "survival"/time-to-event analysis here, which you can see below:
 
 ```{r make survival dataframe}
 # get a key of all patches
@@ -210,3 +212,4 @@ ggcoxdiagnostics(cox.model, type = "dfbeta", # dfbeta plots the estimated change
 ```
 
 - These seem all right
+
