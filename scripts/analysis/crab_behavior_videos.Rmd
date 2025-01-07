@@ -113,7 +113,8 @@ dunnTest(Preference ~ as.factor(Substrate),
 # want to order it as alive, margin, dead for aesthetics
 level_order <- c('Alive', 'Margin', 'Dead') 
 
-# pdf(here("figures/feeding_pref.pdf"), width = 6, height = 4)
+pdf(here("figures/fig_S4_feeding_pref.pdf"), width = 6, height = 4)
+
 strauss_long %>% 
   # plot
   ggplot(aes(x = factor(Substrate, level = level_order), y = Preference, fill = Substrate)) +
@@ -128,7 +129,7 @@ strauss_long %>%
   ylim(-1, 1) +
   stat_summary(geom = 'text', label = c("a", "b", "c"), fun.y = max, vjust = -1, size=6, color = c("black", "black", "black")) # add letters for significance
 
-# dev.off()
+dev.off()
 
 ```
 

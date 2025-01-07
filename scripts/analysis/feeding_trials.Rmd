@@ -66,7 +66,7 @@ algalFeed %>%
 Plot
 
 ```{r plot} 
-# pdf(here("figures/algalFeedTrial.pdf"), width = 6, height = 5)
+pdf(here("figures/fig_S3_algal_feed_trial.pdf"), width = 6, height = 5)
 
 percLoss %>% 
   ggplot(aes(x = Species, y = Percent_loss, fill = Species)) +
@@ -83,7 +83,7 @@ percLoss %>%
   ylim(15,80) +
   theme(legend.position = "none")
 
-# dev.off()
+dev.off()
 ```
 
 # Test differences
@@ -103,7 +103,7 @@ qqline(ctrlFeed$Percent_loss)
 qqnorm(cyclFeed$Percent_loss)
 qqline(cyclFeed$Percent_loss) # Normal so t-test is legitimate
 shapiro.test(cyclFeed$Percent_loss) 
-shapiro.test(cyclFeed$Percent_loss) # Normal
+shapiro.test(ctrlFeed$Percent_loss) # Normal
 ```
 
 ```{r check variances}
@@ -126,17 +126,17 @@ Calculate summary stats for initial algal biomass as well as percent change (rep
 ```{r}
 percLoss %>% 
   group_by(Species) %>% 
-  summarize(N = sqrt(n()), 
+  summarize(sq_N = sqrt(n()), 
             Mean_inital_g = mean(Initial_weight_g),
             sd_inital_g = sd(Initial_weight_g),
-            se_initial_g = sd_inital_g/N,
+            se_initial_g = sd_inital_g/sq_N,
             Mean_per_loss = mean(Percent_loss))
 
 percLoss %>% 
   group_by(Species) %>% 
-  summarize(N = sqrt(n()), 
+  summarize(sq_N = sqrt(n()), 
             Mean_perc_algal_loss = mean(Percent_loss), 
             sd_perc_algal_loss = sd(Percent_loss),
-            se_perc_algal_loss = sd_perc_algal_loss/N) 
+            se_perc_algal_loss = sd_perc_algal_loss/sq_N) 
 ```
 
