@@ -25,10 +25,10 @@ require(patchwork) # combining figures
 
 ```{r}
 # this is the temperature time series from the experiment, with one value per date/time (averaged across HOBO loggers, with a value per few minutes)
-tempTimeseries <- read_csv(here("july2024_updates/generated_data/hobo_timeseries.csv")) # this file was generated using the temperature_wrangling.Rmd script
+tempTimeseries <- read_csv(here("generated_data/hobo_timeseries.csv")) # this file was generated using the temperature_wrangling.Rmd script
 
 # this is the percent tissue loss change experienced by a coral on a given day 
-tissueLoss <- read_csv(here("july2024_updates/generated_data/tissue_loss_change.csv")) # this file was generated using the daily_tissue_loss_change_wrangling.Rmd script
+tissueLoss <- read_csv(here("generated_data/tissue_loss_change.csv")) # this file was generated using the daily_tissue_loss_change_wrangling.Rmd script
 ```
 
 # Set aesthetics
@@ -57,7 +57,7 @@ tempTimeseries %>%
   filter(Date_time > as_datetime("2020-02-01 00:00:00")) %>% # just from the start of the tissue loss data
   ggplot(aes(x = Date_time, y = Mean_temp)) +
   geom_line() +
-  geom_hline(yintercept = 27.3, 
+  geom_hline(yintercept = 28.3, 
              color = vibRed, 
              linetype = "dotted") + # this is the Heron monthly mean water temp according to: https://seatemperature.info/heron-island-water-temperature.html and also JB
   theme_classic() +
@@ -142,7 +142,7 @@ avgTL %>%
 Save these figures as a PDF in the figures folder
 
 ```{r}
-pdf(file = here("july2024_updates/figures/tissue_loss_temperature.pdf"), width = 8.5, height = 9)
+pdf(file = here("figures/tissue_loss_temperature.pdf"), width = 8.5, height = 9)
 
 tempTSFig / TLfig
 
