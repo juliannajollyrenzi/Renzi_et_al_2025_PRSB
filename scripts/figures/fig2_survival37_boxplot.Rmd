@@ -76,7 +76,7 @@ surv_df %>%
   geom_boxplot(size = 1) +
   scale_fill_manual(values = alpha(c(darkO, forGreen), 0.7)) +
   ylab("Number of days") +
-  ggtitle("(a) No wounding") +
+  ggtitle(expression(paste("(", italic("a"), ") No wounding"))) +
   scale_y_continuous(breaks = c(0, 5, 10, 15, 20, 25)) +
   theme_classic() +
   theme(text = element_text(size = 20), legend.position = "none",
@@ -94,7 +94,7 @@ surv_df %>%
   scale_fill_manual(values = alpha(c(darkO, forGreen), 0.7)) +
   ylab("Number of days") +
   scale_y_continuous(breaks = c(0, 5, 10, 15, 20, 25)) +
-  ggtitle("(b) Wounding") +
+  ggtitle(expression(paste("(", italic("b"), ") Wounding"))) +
   scale_x_discrete(labels=c("Algae","Control","Crab + Algae","Crab")) +
   theme_classic() +
   theme(text = element_text(size = 20), legend.position = "none") -> boxp.wound
